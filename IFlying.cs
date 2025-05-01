@@ -1,4 +1,5 @@
-﻿using System;
+﻿//IFlying.cs
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,8 +9,8 @@ namespace Lab3
 {
     public interface IFlying
     {
-        bool wings { get; set; }
-        bool singing { get; set; }
-        bool flying { get; set; }
+        bool Wings { get; set; }
+        bool Singing { get; set; }
+        bool Flying { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Birds.cs
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,14 +9,11 @@ namespace Lab3
 {
     public class Birds : Animal, IFlying, ICrawling
     {
-        public bool wings { get; set; } = true;
-        public bool flying { get; set; } = true;
-        public bool crawling { get; set; } = false;
-        public bool singing { get; set; } = true;
+        public bool Wings { get; set; } = true;
+        public bool Flying { get; set; } = true;
+        public bool Crawling { get; set; } = false;
+        public bool Singing { get; set; } = true;
 
-        public Birds(string name, string envoriment) : base(name, envoriment)
-        {
-
-        }
+        public Birds(string name, string environment) : base(name, environment) { }
     }
 }

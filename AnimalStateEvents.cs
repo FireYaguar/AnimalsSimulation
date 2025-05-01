@@ -1,4 +1,5 @@
-﻿using System;
+﻿//AnimalStateEvents.cs
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -11,58 +12,43 @@ namespace Lab3
 
     public class AnimalStateEvents
     {
-        private event AnimalStateChangeHandler? OnGotHungry;
-        private event AnimalStateChangeHandler? OnSatiety;
-        private event AnimalStateChangeHandler? OnClean;
-        private event AnimalStateChangeHandler? OffClean;
-        private event AnimalStateChangeHandler? OnDeath;
+        private event AnimalStateChangeHandler OnGotHungry;
+        private event AnimalStateChangeHandler OnSatiety;
+        private event AnimalStateChangeHandler OnClean;
+        private event AnimalStateChangeHandler OffClean;
+        private event AnimalStateChangeHandler OnDeath;
 
         public AnimalStateEvents()
         {
             OnGotHungry += HungryState;
             OnSatiety += SatietyState;
-            OnClean += onCleanState;
-            OffClean += offCleanState;
+            OnClean += OnCleanState;
+            OffClean += OffCleanState;
             OnDeath += DeathState;
         }
 
-        public void TriggerGotHungry(Animal animal)
-        {
-            OnGotHungry?.Invoke(animal);
-        }
-        public void TriggerSatiety(Animal animal)
-        {
-            OnSatiety?.Invoke(animal);
-        }
-        public void TriggerOnClean(Animal animal)
-        {
-            OnClean?.Invoke(animal);
-        }
-        public void TriggerOffClean(Animal animal)
-        {
-            OffClean?.Invoke(animal);
-        }
-        public void TriggerDeath(Animal animal)
-        {
-            OnDeath?.Invoke(animal);
-        }
+        public void TriggerGotHungry(Animal animal) => OnGotHungry?.Invoke(animal);
+        public void TriggerSatiety(Animal animal) => OnSatiety?.Invoke(animal);
+        public void TriggerOnClean(Animal animal) => OnClean?.Invoke(animal);
+        public void TriggerOffClean(Animal animal) => OffClean?.Invoke(animal);
+        public void TriggerDeath(Animal animal) => OnDeath?.Invoke(animal);
 
         private void HungryState(Animal animal)
         {
             animal.Hungry = true;
 
-            if (animal is ICrawling crawl)
+            if (animal is ICrawling crawlingAnimal)
             {
-                crawl.crawling = true;
+                crawlingAnimal.Crawling = true;
 
-                if (animal is IRunning run)
+                if (animal is IRunning runningAnimal)
                 {
-                    run.running = false;
+                    runningAnimal.Running = false;
                 }
-                else if (animal is IFlying fly)
+                else if (animal is IFlying flyingAnimal)
                 {
-                    fly.flying = false;
-                    fly.singing = false;
+                    flyingAnimal.Flying = false;
+                    flyingAnimal.Singing = false;
                 }
             }
         }
@@ -71,34 +57,24 @@ namespace Lab3
         {
             animal.Hungry = false;
 
-            if (animal is ICrawling crawl && crawl.crawling)
+            if (animal is ICrawling crawlingAnimal && crawlingAnimal.Crawling)
             {
-                crawl.crawling = false;
+                crawlingAnimal.Crawling = false;
 
-                if (this is IRunning run)
+                if (animal is IRunning runningAnimal)
                 {
-                    run.running = true;
+                    runningAnimal.Running = true;
                 }
-                else if (this is IFlying fly)
+                else if (animal is IFlying flyingAnimal)
                 {
-                    fly.flying = true;
-                    fly.singing = true;
+                    flyingAnimal.Flying = true;
+                    flyingAnimal.Singing = true;
                 }
             }
         }
-        private void onCleanState(Animal animal)
-        {
-            animal.Happiness = true;
-        }
 
-        private void offCleanState(Animal animal)
-        {
-            animal.Happiness = false;
-        }
-
-        private void DeathState(Animal animal)
-        {
-            animal.Life = false;
-        }
+        private void OnCleanState(Animal animal) => animal.Happiness = true;
+        private void OffCleanState(Animal animal) => animal.Happiness = false;
+        private void DeathState(Animal animal) => animal.Life = false;
     }
 }

@@ -1,4 +1,5 @@
-﻿using System;
+﻿//IRunning.cs
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,7 +9,7 @@ namespace Lab3
 {
     public interface IRunning
     {
-        bool running { get; set; }
+        bool Running { get; set; }
         bool Paws { get; set; }
     }
 }

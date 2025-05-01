@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Mammals.cs
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,12 +9,9 @@ namespace Lab3
 {
     public class Mammals : Animal, IRunning, ICrawling
     {
-        public bool running { get; set; } = true;
-        public bool crawling { get; set; } = false;
+        public bool Running { get; set; } = true;
+        public bool Crawling { get; set; } = false;
 
-        public Mammals(string name, string envoriment) : base(name, envoriment)
-        {
-
-        }
+        public Mammals(string name, string environment) : base(name, environment) { }
     }
 }

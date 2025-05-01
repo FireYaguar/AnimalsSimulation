@@ -1,4 +1,5 @@
-﻿using System;
+﻿//Simulation.cs
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,203 +9,167 @@ namespace Lab3
 {
     public class Simulation
     {
-        private Lists list;
-        public Simulation(Lists lists)
+        private readonly Lists _animals;
+        private readonly Status _status;
+        public AnimalStateEvents _events = new AnimalStateEvents();
+
+        private readonly IFeedingStrategy _wildFeeding = new WildFeedingStrategy();
+        private readonly IFeedingStrategy _controlledFeeding = new ControlledFeedingStrategy();
+
+        public Simulation(Lists animals)
         {
-            this.list = lists;
+            _animals = animals ?? throw new ArgumentNullException(nameof(animals));
+            _status = new Status();
         }
 
-        private Status st = new Status();
-        private Feeding fd = new Feeding();
-        AnimalStateEvents Events = new AnimalStateEvents();
-        public void wildSimulation(List<Animal> animals, int days, string environment)
+        public void RunWildSimulation(int days, FeedingData context)
         {
-            for (int i = 0; i < days; i++)
-            {
-                foreach (Animal animal1 in animals)
-                {
-                    animal1.mealsCount = 0;
-                }
-                Console.WriteLine("День: " + (i + 1) + "\n");
-                for (int a = 0; a < 24; a++)
-                {
-                    foreach (Animal animal in animals)
-                    {
-                        if (animal.Life)
-                        {
-                            fd.wildFeeding(animal, a, Events);
-                            if (animal.mealsCount == 6)
-                            {
-                                list.Death(animal, a, Events);
-                                continue;
-                            }
-                            animal.GotHungry(a, Events);
-                        }
-                    }
-                }
-                foreach (Animal animal in animals)
-                {
-                    if (animal.Life && animal.mealsCount == 0)
-                    {
-                        list.Death(animal, 0, Events);
-                    }
-                }
-            }
-            st.simulationEnd(animals);
-            list.DeleteAnimals(animals);
+            var strategy = new WildFeedingStrategy();
+            RunSimulation(_animals.WildAnimals, days, strategy, context);
         }
-        public void StoreControlSimulation(List<Animal> animals, int days, int amount, bool cleaning)
+
+        public void RunStoreControlledSimulation(int days, FeedingData context)
         {
-            for (int i = 0; i < days; i++)
-            {
-                foreach (Animal animal1 in animals)
-                {
-                    animal1.mealsCount = 0;
-                }
-                Console.WriteLine("День: " + (i + 1) + "\n");
-                for (int a = 0; a < 24; a++)
-                {
-                    foreach (Animal animal in animals)
-                    {
-                        if (animal.Life)
-                        {
-                            fd.controlFeeding(animal, a, amount, Events);
-                            if (animal.mealsCount == 6)
-                            {
-                                list.Death(animal, a, Events);
-                                continue;
-                            }
-                            animal.GotHungry(a, Events);
-                        }
-                    }
-                }
-                foreach (Animal animal in animals)
-                {
-                    if (animal.Life)
-                    {
-                        if (animal.mealsCount == 0)
-                        {
-                            list.Death(animal, 0, Events);
-                        }
-                        if (cleaning)
-                        {
-                            Events.TriggerOnClean(animal);
-                        }
-                        else
-                        {
-                            Events.TriggerOffClean(animal);
-                        }
-                    }
-                }
-            }
-            st.simulationEnd(animals);
-            list.DeleteAnimals(animals);
+            var strategy = new ControlledFeedingStrategy();
+            RunSimulation(_animals.StoreAnimals, days, strategy, context);
         }
-        public void StoreNoControlSimulation(List<Animal> animals, int days, int foodAmount)
+
+        public void RunStoreUncontrolledSimulation(int days, FeedingData context)
         {
-            Random rand = new Random();
-            for (int i = 0; i < days; i++)
-            {
-                foreach (Animal animal1 in animals)
-                {
-                    animal1.mealsCount = 0;
-                }
-                Console.WriteLine("День: " + (i + 1) + "\n");
-                for (int a = 0; a < 24; a++)
-                {
-                    int amount = rand.Next(2, 5);
-                    foreach (Animal animal in animals)
-                    {
-                        if (animal.Life)
-                        {
-                            fd.noControlFeeding(animal, a, amount, ref foodAmount, Events);
-                            if (animal.mealsCount == 6)
-                            {
-                                Events.TriggerDeath(animal);
-                                list.Death(animal, a, Events);
-                                continue;
-                            }
-                            animal.GotHungry(a, Events);
-                        }
-                    }
-                }
-                foreach (Animal animal in animals)
-                {
-                    if (animal.Life)
-                    {
-                        if (animal.mealsCount == 0)
-                        {
-                            Events.TriggerDeath(animal);
-                            list.Death(animal, 0, Events);
-                        }
-                        Events.TriggerOffClean(animal);
-                    }
-                }
-            }
-            st.simulationEnd(animals);
-            list.DeleteAnimals(animals);
+            var strategy = new UncontrolledFeedingStrategy();
+            RunSimulation(_animals.StoreAnimals, days, strategy, context);
         }
-        public void HouseControlSimulation(Animal animal, int days, int amount, bool cleaning)
+
+        public void RunHouseControlledSimulation(int days, FeedingData context)
         {
-            for (int i = 0; i < days; i++)
+            if (_animals.HouseAnimal == null) return;
+
+            var strategy = new ControlledFeedingStrategy();
+            RunSingleAnimalSimulation(_animals.HouseAnimal, days, strategy, context);
+        }
+
+        public void RunHouseUncontrolledSimulation(int days, FeedingData context)
+        {
+            if (_animals.HouseAnimal == null) return;
+
+            var strategy = new UncontrolledFeedingStrategy();
+            RunSingleAnimalSimulation(_animals.HouseAnimal, days, strategy, context);
+        }
+
+        private void RunSimulation(List<Animal> animals, int days, IFeedingStrategy feedingStrategy, FeedingData context)
+        {
+            for (int day = 0; day < days; day++)
             {
-                animal.mealsCount = 0;
-                Console.WriteLine("День: " + (i + 1) + "\n");
-                for (int a = 0; a < 24; a++)
+                Console.WriteLine($"День: {day + 1}\n");
+                ResetDailyStats(animals);
+
+                for (int hour = 0; hour < 24; hour++)
                 {
-                    fd.controlFeeding(animal, a, amount, Events);
-                    if (animal.mealsCount == 6)
+                    SimulateHour(animals, hour, feedingStrategy, context);
+                }
+
+                CheckForStarvation(animals, context);
+                HandleCleaning(animals, context);
+            }
+
+            _status.ShowSimulationEnd(animals);
+            _animals.RemoveDeadAnimals(animals);
+        }
+
+        private void RunSingleAnimalSimulation(Animal animal, int days, IFeedingStrategy feedingStrategy, FeedingData context)
+        {
+
+            for (int day = 0; day < days; day++)
+            {
+                Console.WriteLine($"День: {day + 1}\n");
+                animal.MealsCount = 0;
+
+                for (int hour = 0; hour < 24; hour++)
+                {
+                    if (!animal.Life) break;
+                    feedingStrategy.Feed(animal, context, hour, _events);
+
+                    if (animal.MealsCount == 6)
                     {
-                        Events.TriggerDeath(animal);
-                        list.Death(animal, a, Events);
+                        _animals.HandleDeath(animal, hour, _events);
                         break;
                     }
-                    animal.GotHungry(a, Events);
+
+                    animal.GotHungry(hour, _events);
                 }
-                if (animal.mealsCount == 0)
+
+                if (animal.Life && animal.MealsCount == 0)
                 {
-                    Events.TriggerDeath(animal);
-                    list.Death(animal, 0, Events);
+                    _animals.HandleDeath(animal, 0, _events);
                 }
-                if (cleaning)
+
+                if (context.Cleaning)
                 {
-                    Events.TriggerOnClean(animal);
+                    _events.TriggerOnClean(animal);
                 }
                 else
                 {
-                    Events.TriggerOffClean(animal);
+                    _events.TriggerOffClean(animal);
                 }
             }
-            st.HouseSimulationEnd(animal);
-            list.PetDeath();
+
+            _status.ShowHouseSimulationEnd(animal);
+            _animals.CheckPetStatus();
         }
-        public void HouseNoControlSimulation(Animal animal, int days, int foodAmount)
+
+        private void ResetDailyStats(IEnumerable<Animal> animals)
         {
-            Random rand = new Random();
-            for (int i = 0; i < days; i++)
+            foreach (var animal in animals)
             {
-                animal.mealsCount = 0;
-                Console.WriteLine("День: " + (i + 1) + "\n");
-                int amount = rand.Next(2, 5);
-                for (int a = 0; a < 24; a++)
-                {
-                    fd.noControlFeeding(animal, a, amount, ref foodAmount, Events);
-                    if (animal.mealsCount == 6)
-                    {
-                        list.Death(animal, a, Events);
-                        i = days;
-                        break;
-                    }
-                    animal.GotHungry(a, Events);
-                }
-                if (animal.mealsCount == 0)
-                {
-                    list.Death(animal, 0, Events);
-                }
-                Events.TriggerOffClean(animal);
+                animal.MealsCount = 0;
             }
-            st.HouseSimulationEnd(animal);
-            list.PetDeath();
+        }
+
+        private void SimulateHour(List<Animal> animals, int hour, IFeedingStrategy feedingStrategy, FeedingData context)
+        {
+            foreach (var animal in animals)
+            {
+                if (!animal.Life) continue;
+
+                feedingStrategy.Feed(animal, context, hour, _events);
+
+                if (animal.MealsCount == 6)
+                {
+                    _animals.HandleDeath(animal, hour, _events);
+                    continue;
+                }
+
+                animal.GotHungry(hour, _events);
+            }
+        }
+
+        private void CheckForStarvation(IEnumerable<Animal> animals, FeedingData context)
+        {
+            foreach (var animal in animals)
+            {
+                if (animal.Life && animal.MealsCount == 0)
+                {
+                    _animals.HandleDeath(animal, 0, _events);
+                }
+            }
+        }
+
+        private void HandleCleaning(IEnumerable<Animal> animals, FeedingData context)
+        {
+            foreach (var animal in animals)
+            {
+                if (animal.Life)
+                {
+                    if (context.Cleaning)
+                    {
+                        _events.TriggerOnClean(animal);
+                    }
+                    else
+                    {
+                        _events.TriggerOffClean(animal);
+                    }
+                }
+            }
         }
     }
 }
