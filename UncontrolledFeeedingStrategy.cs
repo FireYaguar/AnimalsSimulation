@@ -18,6 +18,10 @@ namespace Lab3
             {
                 FeedAnimal(animal, time, ref foodAmount, events);
             }
+            else
+            {
+                animal.TimeWithoutFood++;
+            }
 
             context.FoodAmount = foodAmount;
         }
@@ -39,7 +43,7 @@ namespace Lab3
             Console.WriteLine($"{(time < 10 ? "0" + time : time)}:00 Тварина {animal.Name} поїла\n");
             animal.MealsCount++;
             foodAmount--;
-            stateEvents.TriggerGotHungry(animal);
+            stateEvents.TriggerSatiety(animal);
         }
     }
 }

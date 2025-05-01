@@ -16,6 +16,10 @@ namespace Lab3
             {
                 FeedAnimal(animal, time, events);
             }
+            else
+            {
+                animal.TimeWithoutFood++;
+            }
         }
 
         private int GetFeedingInterval(int mealsAmount)
@@ -35,7 +39,7 @@ namespace Lab3
             animal.TimeWithoutFood = 0;
             Console.WriteLine($"{(time < 10 ? "0" + time : time)}:00 Тварина {animal.Name} поїла\n");
             animal.MealsCount++;
-            stateEvents.TriggerGotHungry(animal);
+            stateEvents.TriggerSatiety(animal);
         }
     }
 }
