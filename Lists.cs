@@ -12,6 +12,7 @@ namespace Lab3
 {
     public class Lists
     {
+        private CreatorSelection selection = new CreatorSelection(); 
         private readonly List<Animal> _wildAnimals = new List<Animal>();
         private readonly List<Animal> _storeAnimals = new List<Animal>();
         private Animal? _houseAnimal;
@@ -22,19 +23,7 @@ namespace Lab3
 
         public void CreateAnimal(string group, string name, string environment)
         {
-            Animal animal;
-            if (group == "Ссавці")
-            {
-                animal = new Mammals(name, environment);
-            }
-            else if (group == "Рептилії")
-            {
-                animal = new Reptiles(name, environment);
-            }
-            else
-            {
-                animal = new Birds(name, environment);
-            }
+            Animal animal = selection.Selection(group, name, environment);
             AddAnimal(animal);
         }
 
