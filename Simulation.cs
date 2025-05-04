@@ -11,7 +11,7 @@ namespace Lab3
     {
         private readonly Lists _animals;
         private readonly Status _status;
-        public AnimalStateEvents _events = new AnimalStateEvents();
+        public State eventStates = new State();
 
         private readonly IFeedingStrategy _wildFeeding = new WildFeedingStrategy();
         private readonly IFeedingStrategy _controlledFeeding = new ControlledFeedingStrategy();
@@ -20,6 +20,12 @@ namespace Lab3
         {
             _animals = animals ?? throw new ArgumentNullException(nameof(animals));
             _status = new Status();
+
+            eventStates.Attach(new HungryObserver());
+            eventStates.Attach(new SatietyObserver());
+            eventStates.Attach(new OnCleanObserver());
+            eventStates.Attach(new OffCleanObserver());
+            eventStates.Attach(new DeathObserver());
         }
 
         public void RunWildSimulation(int days, FeedingData context)
@@ -87,29 +93,29 @@ namespace Lab3
                 for (int hour = 0; hour < 24; hour++)
                 {
                     if (!animal.Life) break;
-                    feedingStrategy.Feed(animal, context, hour, _events);
+                    feedingStrategy.Feed(animal, context, hour, eventStates);
 
                     if (animal.MealsCount == 6)
                     {
-                        _animals.HandleDeath(animal, hour, _events);
+                        _animals.HandleDeath(animal, hour, eventStates);
                         break;
                     }
 
-                    animal.GotHungry(hour, _events);
+                    animal.GotHungry(hour, eventStates);
                 }
 
                 if (animal.Life && animal.MealsCount == 0)
                 {
-                    _animals.HandleDeath(animal, 0, _events);
+                    _animals.HandleDeath(animal, 0, eventStates);
                 }
 
                 if (context.Cleaning)
                 {
-                    _events.TriggerOnClean(animal);
+                    eventStates.Notify(animal, AnimalEvent.Clean);
                 }
                 else
                 {
-                    _events.TriggerOffClean(animal);
+                    eventStates.Notify(animal, AnimalEvent.OffClean);
                 }
             }
 
@@ -131,15 +137,15 @@ namespace Lab3
             {
                 if (!animal.Life) continue;
 
-                feedingStrategy.Feed(animal, context, hour, _events);
+                feedingStrategy.Feed(animal, context, hour, eventStates);
 
                 if (animal.MealsCount == 6)
                 {
-                    _animals.HandleDeath(animal, hour, _events);
+                    _animals.HandleDeath(animal, hour, eventStates);
                     continue;
                 }
 
-                animal.GotHungry(hour, _events);
+                animal.GotHungry(hour, eventStates);
             }
         }
 
@@ -149,7 +155,7 @@ namespace Lab3
             {
                 if (animal.Life && animal.MealsCount == 0)
                 {
-                    _animals.HandleDeath(animal, 0, _events);
+                    _animals.HandleDeath(animal, 0, eventStates);
                 }
             }
         }
@@ -162,11 +168,11 @@ namespace Lab3
                 {
                     if (context.Cleaning)
                     {
-                        _events.TriggerOnClean(animal);
+                        eventStates.Notify(animal, AnimalEvent.Clean);
                     }
                     else
                     {
-                        _events.TriggerOffClean(animal);
+                        eventStates.Notify(animal, AnimalEvent.OffClean);
                     }
                 }
             }

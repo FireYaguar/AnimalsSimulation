@@ -29,14 +29,14 @@ namespace Lab3
             Environment = environment ?? throw new ArgumentNullException(nameof(environment));
         }
 
-        public void GotHungry(int time, AnimalStateEvents stateEvents)
+        public void GotHungry(int time, State stateEvents)
         {
             if (stateEvents == null) throw new ArgumentNullException(nameof(stateEvents));
 
             if (TimeWithoutFood == 9)
             {
                 Console.WriteLine($"{(time < 10 ? "0" + time : time)}:00 Тварина {Name} не їла 8 годин, вона може лише повзати\n");
-                stateEvents.TriggerGotHungry(this);
+                stateEvents.Notify(this, AnimalEvent.Hungry);
             }
         }
     }

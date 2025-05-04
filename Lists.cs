@@ -54,14 +54,14 @@ namespace Lab3
             }
         }
 
-        public void HandleDeath(Animal animal, int time, AnimalStateEvents stateEvents)
+        public void HandleDeath(Animal animal, int time, State stateEvents)
         {
             string message = time != 0
                 ? $"{(time < 10 ? "0" + time : time)}:00 Тварина {animal.Name} померла від переїдання\n"
                 : $"Тварина {animal.Name} померла від голоду через відсутність їжі протягом доби\n";
 
             Console.WriteLine(message);
-            stateEvents.TriggerDeath(animal);
+            stateEvents.Notify(animal, AnimalEvent.Death);
         }
 
         public void RemoveDeadAnimals(List<Animal> animals)

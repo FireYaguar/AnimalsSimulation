@@ -6,8 +6,12 @@ using System.Threading.Tasks;
 
 namespace Lab3
 {
-    public interface IFeedingStrategy
+    public enum AnimalEvent
     {
-        void Feed(Animal animal, FeedingData context, int time, IState stateEvents);
+        Hungry,
+        Satiety,
+        Clean,
+        OffClean,
+        Death
     }
 }
